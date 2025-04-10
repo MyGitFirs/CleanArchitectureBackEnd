@@ -2,6 +2,7 @@ using CleanArchitecture.Application;
 using CleanArchitecture.Application.Common.Interfaces;
 using CleanArchitecture.Infrastructure;
 using CleanArchitecture.Infrastructure.Persistence;
+using CleanArchitecture.Infrastructure.Services;
 using CleanArchitecture.WebUI.Filters;
 using CleanArchitecture.WebUI.Services;
 using FluentValidation.AspNetCore;
@@ -30,12 +31,28 @@ namespace CleanArchitecture.WebUI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend",
+                    builder =>
+                    {
+                        builder.WithOrigins("http://localhost:4200", "http://localhost:8100") // Allow both Angular & Ionic
+                               .AllowAnyMethod()
+                               .AllowAnyHeader()
+                               .AllowCredentials(); // Allow cookies/auth headers
+                    });
+            });
             services.AddApplication();
             services.AddInfrastructure(Configuration);
 
             services.AddSingleton<ICurrentUserService, CurrentUserService>();
 
             services.AddHttpContextAccessor();
+            services.AddTransient<IJwtTokenService, JwtTokenService>();
+            services.AddHostedService<WalletResetService>();
+
+            services.AddHttpClient<NotificationService>();
+            services.AddScoped<INotificationService, NotificationService>();
 
             services.AddHealthChecks()
                 .AddDbContextCheck<ApplicationDbContext>();
@@ -57,6 +74,7 @@ namespace CleanArchitecture.WebUI
             {
                 configuration.RootPath = "ClientApp/dist";
             });
+
 
             services.AddOpenApiDocument(configure =>
             {
@@ -101,7 +119,7 @@ namespace CleanArchitecture.WebUI
                 settings.Path = "/api";
                 settings.DocumentPath = "/api/specification.json";
             });
-
+            app.UseCors("AllowFrontend"); // Apply the CORS policy
             app.UseRouting();
 
             app.UseAuthentication();

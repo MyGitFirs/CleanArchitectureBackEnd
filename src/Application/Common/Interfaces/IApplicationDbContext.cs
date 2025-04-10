@@ -7,10 +7,14 @@ namespace CleanArchitecture.Application.Common.Interfaces
 {
     public interface IApplicationDbContext
     {
-        DbSet<TodoList> TodoLists { get; set; }
 
-        DbSet<TodoItem> TodoItems { get; set; }
+        DbSet<Domain.Entities.User> Users { get; set; }
 
+        DbSet<Domain.Entities.Company> Companies { get; set; }
+
+        DbSet<Domain.Entities.Kiosk> Kiosks { get; set; }
+        DbSet<Domain.Entities.Wallet> Wallets { get; set; }
+        DbSet<Domain.Entities.Transaction> Transactions { get; set; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken);
     }
 }
